@@ -46,3 +46,11 @@ func PopCountV3(x uint64) int {
 	}
 	return count
 }
+
+func PopCountV4(x uint64) int {
+	var count int
+	for ; x > 0; x = x & (x - 1) {
+		count += 1
+	}
+	return count
+}
