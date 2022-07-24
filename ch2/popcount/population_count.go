@@ -33,3 +33,16 @@ func PopCountV2(x uint64) int {
 	}
 	return count
 }
+
+func PopCountV3(x uint64) int {
+	count := int(x & 1)
+	for i := 1; i < 64; i++ {
+		if x <= 0 {
+			break
+		}
+
+		x = x >> 1
+		count += int(x & 1)
+	}
+	return count
+}
