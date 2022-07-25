@@ -13,7 +13,7 @@ func TestPopCount(t *testing.T) {
 		v2 := popcount.PopCountV2(n)
 		v3 := popcount.PopCountV3(n)
 		v4 := popcount.PopCountV4(n)
-		if v1 != v2 || v2 != v3 {
+		if v1 != v2 || v2 != v3 || v3 != v4 {
 			t.Fatalf("Got different result in different solutions, input: %d, results: %d %d %d %d", n, v1, v2, v3, v4)
 		}
 	}
