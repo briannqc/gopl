@@ -8,9 +8,8 @@ import (
 )
 
 func main() {
-	for _, arg := range os.Args[1:] {
-		fmt.Println(commaSignedFloat(arg))
-	}
+	s1, s2 := os.Args[1], os.Args[2]
+	fmt.Printf("s1: %s, s2: %s, anagrams: %v\n", s1, s2, anagrams(s1, s2))
 }
 
 // comma inserts commas in a non-negative decimal integer string.
@@ -56,4 +55,26 @@ func commaSignedFloat(s string) string {
 	}
 
 	return formatted.String()
+}
+
+// anagrams returns true if 2 strings have the same letters in a different order.
+// Exercise 3.12.
+func anagrams(s1, s2 string) bool {
+	if len(s1) != len(s2) {
+		return false
+	}
+
+	m1, m2 := make(map[byte]int), make(map[byte]int)
+	for i := 0; i < len(s1); i++ {
+		m1[s1[i]] += 1
+		m2[s2[i]] += 1
+	}
+
+	for b, count := range m1 {
+		if m2[b] != count {
+			return false
+		}
+	}
+
+	return true
 }
