@@ -5,13 +5,52 @@ import (
 	"image/color"
 	"image/png"
 	"io"
+	"log"
 	"math/big"
 	"math/cmplx"
-	"os"
+	"net/http"
+	"strconv"
 )
 
 func main() {
-	renderBigRat(os.Stdout)
+	http.HandleFunc("/mandelbrot", func(w http.ResponseWriter, r *http.Request) {
+		x, err := strconv.Atoi(r.URL.Query().Get("x"))
+		if err != nil {
+			x = 2
+		}
+		y, err := strconv.Atoi(r.URL.Query().Get("y"))
+		if err != nil {
+			y = 2
+		}
+		zoom, err := strconv.Atoi(r.URL.Query().Get("zoom"))
+		if err != nil {
+			zoom = 1024
+		}
+		render(w, x, y, zoom, mandelbrotComplex128)
+	})
+
+	log.Fatal(http.ListenAndServe("localhost:8000", nil))
+}
+
+func render(
+	w io.Writer,
+	x, y int,
+	zoom int,
+	f func(complex128) color.Color,
+) {
+	xmax, xmin := float64(x), float64(-x)
+	ymax, ymin := float64(y), float64(-y)
+
+	img := image.NewRGBA(image.Rect(0, 0, zoom, zoom))
+	for py := 0; py < zoom; py++ {
+		y := float64(py)/float64(zoom)*(ymax-ymin) + ymin
+		for px := 0; px < zoom; px++ {
+			x := float64(px)/float64(zoom)*(xmax-xmin) + xmin
+			z := complex(x, y)
+			img.Set(px, py, f(z))
+		}
+	}
+	png.Encode(w, img)
 }
 
 const (
