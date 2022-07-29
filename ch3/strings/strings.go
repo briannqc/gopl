@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 )
 
 func main() {
 	for _, arg := range os.Args[1:] {
-		fmt.Println(comma(arg))
+		fmt.Println(commaSignedFloat(arg))
 	}
 }
 
@@ -31,5 +32,28 @@ func comma(s string) string {
 
 		formatted.Write([]byte(s[from:to]))
 	}
+	return formatted.String()
+}
+
+// commaSignedFloat inserts commas in a signed float string.
+//
+// Exercise 3.11. Enhance comma so that it deals correctly with floating-point
+// numbers and an optional sign.
+func commaSignedFloat(s string) string {
+	formatted := bytes.NewBuffer(make([]byte, 0, len(s)))
+
+	if strings.HasPrefix(s, "-") {
+		formatted.WriteByte('-')
+		s = s[1:]
+	}
+
+	if dotIdx := strings.Index(s, "."); dotIdx >= 0 {
+		formatted.WriteString(comma(s[0:dotIdx]))
+		s = s[dotIdx:]
+		formatted.WriteString(s)
+	} else {
+		formatted.WriteString(comma(s))
+	}
+
 	return formatted.String()
 }
