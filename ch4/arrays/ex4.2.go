@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-func main() {
+func mainE42() {
 
 	var hash string
 	flag.StringVar(&hash, "hash", "SHA256", "Available options: SHA256 (default), SHA384, SHA512")
