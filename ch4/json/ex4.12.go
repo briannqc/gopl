@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -89,4 +90,30 @@ type Comic struct {
 	Num        int
 	Title      string
 	Transcript string
+}
+
+func SearchComics(indexFileName string, searchTerm string) ([]Comic, error) {
+	indexFile, err := os.Open(indexFileName)
+	if err != nil {
+		return nil, err
+	}
+	defer indexFile.Close()
+
+	var foundLines []string
+	scanner := bufio.NewScanner(indexFile)
+	for scanner.Scan() {
+		text := scanner.Text()
+		if strings.Contains(text, searchTerm) {
+			foundLines = append(foundLines, text)
+		}
+	}
+
+	var foundComics []Comic
+	for _, line := range foundLines {
+		var comic Comic
+		_ = json.Unmarshal([]byte(line), &comic)
+		foundComics = append(foundComics, comic)
+	}
+
+	return foundComics, nil
 }
