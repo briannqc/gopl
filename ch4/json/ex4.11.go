@@ -1,16 +1,20 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 )
 
 func main() {
-	ops := flag.String("ops", "", "Available: create, read, update, and close")
+	ops := flag.String("ops", "", "Available: read")
 	repo := flag.String("repo", "", "Repository where the issue was/will be created in")
 	number := flag.Int("number", 0, "Issue number")
 	flag.Parse()
@@ -19,8 +23,41 @@ func main() {
 		if description, err := GetIssue(*repo, *number); err != nil {
 			fmt.Fprintf(os.Stderr, "Read issue: %v on repo: %v failed, err: %v", *number, *repo, err)
 		} else {
-			fmt.Println(description)
+			printIssueInEditor(description)
 		}
+	}
+}
+
+func printIssueInEditor(s string) {
+	editor := os.Getenv("EDITOR")
+	if editor == "" {
+		editor = "vim"
+	}
+
+	editorPath, err := exec.LookPath(editor)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tmpFile, err := ioutil.TempFile("", "issue")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tmpFile.Close()
+	defer os.Remove(tmpFile.Name())
+
+	buf := bufio.NewWriter(tmpFile)
+	buf.WriteString(s)
+	buf.Flush()
+
+	cmd := &exec.Cmd{
+		Path:   editorPath,
+		Args:   []string{editor, tmpFile.Name()},
+		Stdin:  os.Stdin,
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
+	}
+	if err := cmd.Run(); err != nil {
+		log.Fatal()
 	}
 }
 
