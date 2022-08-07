@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func main() {
+func main_411() {
 	ops := flag.String("ops", "", "Available: read")
 	repo := flag.String("repo", "", "Repository where the issue was/will be created in")
 	number := flag.Int("number", 0, "Issue number")
