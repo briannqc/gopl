@@ -1,0 +1,26 @@
+<h1>Repository: {{.Repo}}</h1>
+<h2>{{.Total}} milestones</h2>
+<table>
+    <tr style="text-align: left">
+        <th>#</th>
+        <th>State</th>
+        <th>Title</th>
+        <th>Created at</th>
+        <th>Created by</th>
+        <th>Description</th>
+        <th>#Open</th>
+        <th>#Closed</th>
+    </tr>
+    {{range .Items}}
+    <tr>
+        <td><a href='{{.HTMLURL}}'>{{.Number}}</a></td>
+        <td>{{.State}}</td>
+        <td>{{.Title}}</td>
+        <td>{{.CreatedAt}}</td>
+        <td><a href="{{.Creator.HTMLURL}}">{{.Creator.Login}}</a></td>
+        <td>{{.Description}}</td>
+        <td>{{.OpenIssues}}</td>
+        <td>{{.ClosedIssues}}</td>
+    </tr>
+    {{end}}
+</table>

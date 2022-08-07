@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"text/template"
+	"time"
 )
 
 var (
@@ -16,11 +17,15 @@ var (
 
 	//go:embed ex4.14_template_contributors.html
 	templateContributors []byte
+
+	//go:embed ex4.14_template_milestones.html
+	templateMilestones []byte
 )
 
 func main() {
 	http.HandleFunc("/issues", listIssueHandler)
 	http.HandleFunc("/contributors", listContributorHandler)
+	http.HandleFunc("/milestones", listMilestoneHandler)
 	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
 
@@ -35,6 +40,14 @@ func listIssueHandler(w http.ResponseWriter, r *http.Request) {
 func listContributorHandler(w http.ResponseWriter, r *http.Request) {
 	owner, repo := r.URL.Query().Get("owner"), r.URL.Query().Get("repo")
 	if err := RenderHTMLGitHubContributors(w, owner, repo); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(err.Error()))
+	}
+}
+
+func listMilestoneHandler(w http.ResponseWriter, r *http.Request) {
+	owner, repo := r.URL.Query().Get("owner"), r.URL.Query().Get("repo")
+	if err := RenderHTMLGitHubMilestone(w, owner, repo); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(err.Error()))
 	}
@@ -92,7 +105,7 @@ func RenderHTMLGitHubContributors(w io.Writer, owner, repo string) error {
 		return err
 	}
 
-	issueList, err := template.New("contributorList").Parse(string(templateContributors))
+	contributorList, err := template.New("contributorList").Parse(string(templateContributors))
 	if err != nil {
 		return err
 	}
@@ -107,7 +120,42 @@ func RenderHTMLGitHubContributors(w io.Writer, owner, repo string) error {
 		Items: contributors,
 	}
 
-	return issueList.Execute(w, result)
+	return contributorList.Execute(w, result)
+}
+
+func RenderHTMLGitHubMilestone(w io.Writer, owner, repo string) error {
+	url := fmt.Sprintf("https://api.github.com/repos/%v/%v/milestones", owner, repo)
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("list milestone got: %v", resp.Status)
+	}
+
+	var milestones []Milestone
+	if err := json.NewDecoder(resp.Body).Decode(&milestones); err != nil {
+		return err
+	}
+
+	milestoneList, err := template.New("milestoneList").Parse(string(templateMilestones))
+	if err != nil {
+		return err
+	}
+
+	result := struct {
+		Repo  string
+		Total int
+		Items []Milestone
+	}{
+		Repo:  fmt.Sprintf("%v/%v", owner, repo),
+		Total: len(milestones),
+		Items: milestones,
+	}
+
+	return milestoneList.Execute(w, result)
 }
 
 type Issue struct {
@@ -127,4 +175,16 @@ type User struct {
 type Contributor struct {
 	User
 	Contributions int
+}
+
+type Milestone struct {
+	HTMLURL      string `json:"html_url"`
+	Number       int
+	Title        string
+	CreatedAt    time.Time `json:"created_at"`
+	Description  string
+	Creator      User
+	State        string
+	OpenIssues   int `json:"open_issues"`
+	ClosedIssues int `json:"closed_issues"`
 }
