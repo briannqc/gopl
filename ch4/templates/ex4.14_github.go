@@ -13,16 +13,28 @@ import (
 var (
 	//go:embed ex4.14_template_issues.html
 	templateIssues []byte
+
+	//go:embed ex4.14_template_contributors.html
+	templateContributors []byte
 )
 
 func main() {
 	http.HandleFunc("/issues", listIssueHandler)
+	http.HandleFunc("/contributors", listContributorHandler)
 	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
 
 func listIssueHandler(w http.ResponseWriter, r *http.Request) {
 	owner, repo := r.URL.Query().Get("owner"), r.URL.Query().Get("repo")
 	if err := RenderHTMLGitHubIssues(w, owner, repo); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(err.Error()))
+	}
+}
+
+func listContributorHandler(w http.ResponseWriter, r *http.Request) {
+	owner, repo := r.URL.Query().Get("owner"), r.URL.Query().Get("repo")
+	if err := RenderHTMLGitHubContributors(w, owner, repo); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		_, _ = w.Write([]byte(err.Error()))
 	}
@@ -63,6 +75,41 @@ func RenderHTMLGitHubIssues(w io.Writer, owner, repo string) error {
 	return issueList.Execute(w, result)
 }
 
+func RenderHTMLGitHubContributors(w io.Writer, owner, repo string) error {
+	url := fmt.Sprintf("https://api.github.com/repos/%v/%v/contributors", owner, repo)
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("list contributors got: %v", resp.Status)
+	}
+
+	var contributors []Contributor
+	if err := json.NewDecoder(resp.Body).Decode(&contributors); err != nil {
+		return err
+	}
+
+	issueList, err := template.New("contributorList").Parse(string(templateContributors))
+	if err != nil {
+		return err
+	}
+
+	result := struct {
+		Repo  string
+		Total int
+		Items []Contributor
+	}{
+		Repo:  fmt.Sprintf("%v/%v", owner, repo),
+		Total: len(contributors),
+		Items: contributors,
+	}
+
+	return issueList.Execute(w, result)
+}
+
 type Issue struct {
 	Number  int
 	State   string
@@ -75,4 +122,9 @@ type User struct {
 	Login     string
 	AvatarURL string `json:"avatar_url"`
 	HTMLURL   string `json:"html_url"`
+}
+
+type Contributor struct {
+	User
+	Contributions int
 }

@@ -1,0 +1,14 @@
+<h1>Repository: {{.Repo}}</h1>
+<h2>{{.Total}} contributors</h2>
+<table>
+    <tr style="text-align: left">
+        <th>User</th>
+        <th>Contributions</th>
+    </tr>
+    {{range .Items}}
+    <tr>
+        <td><a href='{{.HTMLURL}}'>{{.Login}}</a></td>
+        <td>{{.Contributions}}</td>
+    </tr>
+    {{end}}
+</table>
