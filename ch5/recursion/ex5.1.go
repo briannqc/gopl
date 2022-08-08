@@ -7,19 +7,23 @@ import (
 	"golang.org/x/net/html"
 )
 
-func FindLinks(rootURL string) error {
+func Fetch(rootURL string) (*html.Node, error) {
 	resp, err := http.Get(rootURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("got: %v for url: %v", resp.Status, rootURL)
+		return nil, fmt.Errorf("got: %v for url: %v", resp.Status, rootURL)
 	}
 
-	doc, err := html.Parse(resp.Body)
+	return html.Parse(resp.Body)
+}
+
+func FindLinks(rootURL string) error {
+	doc, err := Fetch(rootURL)
 	if err != nil {
 		return err
 	}
