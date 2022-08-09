@@ -12,9 +12,11 @@ func PrintPrettyHTML(w io.Writer, n *html.Node) {
 	forEachNode(w, n, startElement, endElement)
 }
 
-func forEachNode(w io.Writer, n *html.Node, pre, post func(io.Writer, *html.Node)) {
+func forEachNode(w io.Writer, n *html.Node, pre, post func(io.Writer, *html.Node) bool) {
 	if pre != nil {
-		pre(w, n)
+		if cont := pre(w, n); !cont {
+			return
+		}
 	}
 
 	for c := n.FirstChild; c != nil; c = c.NextSibling {
@@ -22,13 +24,15 @@ func forEachNode(w io.Writer, n *html.Node, pre, post func(io.Writer, *html.Node
 	}
 
 	if post != nil {
-		post(w, n)
+		if cont := post(w, n); !cont {
+			return
+		}
 	}
 }
 
 var depth int
 
-func startElement(w io.Writer, n *html.Node) {
+func startElement(w io.Writer, n *html.Node) bool {
 	if n.Type == html.ElementNode {
 		fmt.Fprintf(w, "%*s<%s ", depth*2, "", n.Data)
 		depth++
@@ -45,9 +49,10 @@ func startElement(w io.Writer, n *html.Node) {
 	} else if n.Type == html.TextNode {
 		fmt.Fprint(w, n.Data)
 	}
+	return true
 }
 
-func endElement(w io.Writer, n *html.Node) {
+func endElement(w io.Writer, n *html.Node) bool {
 	if n.Type == html.ElementNode {
 		depth--
 
@@ -57,4 +62,5 @@ func endElement(w io.Writer, n *html.Node) {
 			fmt.Fprint(w, "/>\n")
 		}
 	}
+	return true
 }
