@@ -104,22 +104,31 @@ func (s *IntSet) SymmetricDifference(t *IntSet) *IntSet {
 	return &symDiff
 }
 
-// String returns the set as a string of the form "{1 2 3}".
-func (s *IntSet) String() string {
-	var buf bytes.Buffer
-	buf.WriteByte('{')
+func (s *IntSet) Elems() []int {
+	var elems []int
 	for i, word := range s.words {
 		if word == 0 {
 			continue
 		}
 		for j := 0; j < 64; j++ {
 			if word&(1<<uint(j)) != 0 {
-				if buf.Len() > len("{") {
-					buf.WriteByte(' ')
-				}
-				fmt.Fprintf(&buf, "%d", 64*i+j)
+				elems = append(elems, 64*i+j)
 			}
 		}
+	}
+	return elems
+}
+
+// String returns the set as a string of the form "{1 2 3}".
+func (s *IntSet) String() string {
+	var buf bytes.Buffer
+	buf.WriteByte('{')
+	elems := s.Elems()
+	for _, e := range elems {
+		if buf.Len() > len("{") {
+			buf.WriteByte(' ')
+		}
+		fmt.Fprintf(&buf, "%d", e)
 	}
 	buf.WriteByte('}')
 	return buf.String()

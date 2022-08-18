@@ -57,6 +57,47 @@ func TestIntSet_SymmetricDifference(t *testing.T) {
 	}
 }
 
+func TestIntSet_Elems(t *testing.T) {
+	tests := []struct {
+		set  *IntSet
+		want []int
+	}{
+		{
+			set: func() *IntSet {
+				var set IntSet
+				set.Add(1)
+				set.Add(2)
+				set.Add(3)
+				return &set
+			}(),
+			want: []int{1, 2, 3},
+		},
+		{
+			set: func() *IntSet {
+				var set IntSet
+				set.Add(100)
+				set.Add(300)
+				return &set
+			}(),
+			want: []int{100, 300},
+		},
+		{
+			set: func() *IntSet {
+				var set IntSet
+				return &set
+			}(),
+			want: nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.set.String(), func(t *testing.T) {
+			got := tt.set.Elems()
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func TestIntSet_Len(t *testing.T) {
 	tests := []struct {
 		set  *IntSet
