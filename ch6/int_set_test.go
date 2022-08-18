@@ -82,3 +82,13 @@ func TestIntSet_Copy(t *testing.T) {
 		assert.True(t, copied.Has(i))
 	}
 }
+
+func TestIntSet_AddAll(t *testing.T) {
+	var set IntSet
+	set.AddAll(1, 2, 3)
+
+	assert.Equal(t, 3, set.Len())
+	assert.True(t, set.Has(1))
+	assert.True(t, set.Has(2))
+	assert.True(t, set.Has(3))
+}

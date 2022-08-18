@@ -93,3 +93,9 @@ func (s *IntSet) Copy() *IntSet {
 	copy(copied.words, s.words)
 	return &copied
 }
+
+func (s *IntSet) AddAll(nums ...int) {
+	for _, n := range nums {
+		s.Add(n)
+	}
+}
