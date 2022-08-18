@@ -5,21 +5,23 @@ import (
 	"fmt"
 )
 
+var uintSize = 32 << (^uint(0) >> 63)
+
 // An IntSet is a set of small non-negative integers.
 // Its zero value represents the empty set.
 type IntSet struct {
-	words []uint64
+	words []uint
 }
 
 // Has reports whether the set contains the non-negative value x.
 func (s *IntSet) Has(x int) bool {
-	word, bit := x/64, uint(x%64)
+	word, bit := x/uintSize, uint(x%uintSize)
 	return word < len(s.words) && s.words[word]&(1<<bit) != 0
 }
 
 // Add adds the non-negative value x to the set.
 func (s *IntSet) Add(x int) {
-	word, bit := x/64, uint(x%64)
+	word, bit := x/uintSize, uint(x%uintSize)
 	for word >= len(s.words) {
 		s.words = append(s.words, 0)
 	}
@@ -49,7 +51,7 @@ func (s *IntSet) IntersectWith(t *IntSet) *IntSet {
 	}
 
 	var intersect IntSet
-	intersect.words = make([]uint64, 0, lenIntersect)
+	intersect.words = make([]uint, 0, lenIntersect)
 	for i := 0; i < lenIntersect; i++ {
 		word := s.words[i] & t.words[i]
 		intersect.words = append(intersect.words, word)
@@ -91,7 +93,7 @@ func (s *IntSet) SymmetricDifference(t *IntSet) *IntSet {
 	}
 
 	var symDiff IntSet
-	symDiff.words = make([]uint64, 0, symDiffLen)
+	symDiff.words = make([]uint, 0, symDiffLen)
 
 	for i := 0; i < minLen; i++ {
 		symDiff.words = append(symDiff.words, s.words[i]^t.words[i])
@@ -110,9 +112,9 @@ func (s *IntSet) Elems() []int {
 		if word == 0 {
 			continue
 		}
-		for j := 0; j < 64; j++ {
+		for j := 0; j < uintSize; j++ {
 			if word&(1<<uint(j)) != 0 {
-				elems = append(elems, 64*i+j)
+				elems = append(elems, uintSize*i+j)
 			}
 		}
 	}
@@ -148,7 +150,7 @@ func (s *IntSet) Len() int {
 
 // Remove removes x from the set
 func (s *IntSet) Remove(x int) {
-	word, bit := x/64, uint(x%64)
+	word, bit := x/uintSize, uint(x%uintSize)
 	if word >= len(s.words) {
 		return
 	}
@@ -164,7 +166,7 @@ func (s *IntSet) Clear() {
 // Copy returns a copy of the set
 func (s *IntSet) Copy() *IntSet {
 	var copied IntSet
-	copied.words = make([]uint64, len(s.words))
+	copied.words = make([]uint, len(s.words))
 	copy(copied.words, s.words)
 	return &copied
 }
