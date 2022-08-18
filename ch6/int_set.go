@@ -38,6 +38,72 @@ func (s *IntSet) UnionWith(t *IntSet) {
 	}
 }
 
+// IntersectWith creates and returns an IntSet of elements present in both sets.
+func (s *IntSet) IntersectWith(t *IntSet) *IntSet {
+	lenS := len(s.words)
+	lenT := len(t.words)
+
+	lenIntersect := lenS
+	if lenIntersect > lenT {
+		lenIntersect = lenT
+	}
+
+	var intersect IntSet
+	intersect.words = make([]uint64, 0, lenIntersect)
+	for i := 0; i < lenIntersect; i++ {
+		word := s.words[i] & t.words[i]
+		intersect.words = append(intersect.words, word)
+	}
+	return &intersect
+}
+
+// DifferentWith creates and returns an IntSet of elements present in s but not t.
+func (s *IntSet) DifferentWith(t *IntSet) *IntSet {
+	diff := s.Copy()
+	lenT := len(t.words)
+	lenDiff := len(diff.words)
+
+	minLen := lenDiff
+	if minLen > lenT {
+		minLen = lenT
+	}
+
+	for i := 0; i < minLen; i++ {
+		diff.words[i] &= ^t.words[i]
+	}
+	return diff
+}
+
+// SymmetricDifference creates and returns an IntSet of
+// elements present in one set or the other but not both.
+func (s *IntSet) SymmetricDifference(t *IntSet) *IntSet {
+	lenS := len(s.words)
+	lenT := len(t.words)
+
+	minLen := lenS
+	if minLen > lenT {
+		minLen = lenT
+	}
+
+	symDiffLen := lenS
+	if symDiffLen < lenT {
+		symDiffLen = lenT
+	}
+
+	var symDiff IntSet
+	symDiff.words = make([]uint64, 0, symDiffLen)
+
+	for i := 0; i < minLen; i++ {
+		symDiff.words = append(symDiff.words, s.words[i]^t.words[i])
+	}
+	if lenS < lenT {
+		symDiff.words = append(symDiff.words, t.words[lenS:]...)
+	} else {
+		symDiff.words = append(symDiff.words, s.words[lenT:]...)
+	}
+	return &symDiff
+}
+
 // String returns the set as a string of the form "{1 2 3}".
 func (s *IntSet) String() string {
 	var buf bytes.Buffer

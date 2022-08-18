@@ -6,6 +6,57 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestIntSet_IntersectWith(t *testing.T) {
+	var s1, s2 IntSet
+	for i := 0; i < 600; i++ {
+		s1.Add(i)
+	}
+	for i := 500; i < 1000; i++ {
+		s2.Add(i)
+	}
+
+	intersect := s1.IntersectWith(&s2)
+	assert.Equal(t, 100, intersect.Len())
+	for i := 500; i < 600; i++ {
+		assert.True(t, intersect.Has(i))
+	}
+}
+
+func TestIntSet_DifferentWith(t *testing.T) {
+	var s1, s2 IntSet
+	for i := 0; i < 600; i++ {
+		s1.Add(i)
+	}
+	for i := 500; i < 1000; i++ {
+		s2.Add(i)
+	}
+
+	diff := s1.DifferentWith(&s2)
+	assert.Equal(t, 500, diff.Len())
+	for i := 0; i < 500; i++ {
+		assert.True(t, diff.Has(i))
+	}
+}
+
+func TestIntSet_SymmetricDifference(t *testing.T) {
+	var s1, s2 IntSet
+	for i := 0; i < 600; i++ {
+		s1.Add(i)
+	}
+	for i := 500; i < 1000; i++ {
+		s2.Add(i)
+	}
+
+	symDiff := s1.SymmetricDifference(&s2)
+	assert.Equal(t, 900, symDiff.Len())
+	for i := 0; i < 500; i++ {
+		assert.Truef(t, symDiff.Has(i), "Should have: %d but not", i)
+	}
+	for i := 600; i < 1000; i++ {
+		assert.Truef(t, symDiff.Has(i), "Should have: %d but not", i)
+	}
+}
+
 func TestIntSet_Len(t *testing.T) {
 	tests := []struct {
 		set  *IntSet
