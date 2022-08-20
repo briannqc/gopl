@@ -1,4 +1,4 @@
-package ch7
+package sec7_1
 
 import (
 	"bufio"
