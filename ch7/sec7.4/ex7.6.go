@@ -11,6 +11,10 @@ type Celsius struct {
 	value float64
 }
 
+// String returns temperature value with °C.
+// That answer exercise 7.7:  Explain why the
+// help message contains °C when the default
+// value of 20.0 does not.
 func (c *Celsius) String() string {
 	return fmt.Sprintf("%.2f°C", c.value)
 }
