@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+    </style>
+    <title>Table</title>
+</head>
+<body>
+
+<table style="width:100%">
+    <tr>
+        {{range .Columns}}
+        <th>{{.}}</th>
+        {{end}}
+    </tr>
+
+    {{range .Rows}}
+    <tr>
+        {{range .}}
+        <td>{{.}}</td>
+        {{end}}
+    </tr>
+    {{end}}
+</table>
+
+</body>
+</html>

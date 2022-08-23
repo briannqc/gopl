@@ -1,4 +1,4 @@
-package sec7_6
+package main
 
 import (
 	"bytes"
