@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"strconv"
@@ -73,12 +74,18 @@ func (db *Database) Delete(key string) error {
 }
 
 type Handler struct {
-	db *Database
+	db           *Database
+	listTemplate *template.Template
 }
 
 func (h *Handler) list(w http.ResponseWriter, _ *http.Request) {
 	prices := h.db.List()
-	_, _ = fmt.Fprintln(w, prices)
+	err := h.listTemplate.Execute(w, prices)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = fmt.Fprintln(w, err)
+		return
+	}
 }
 
 func (h *Handler) get(w http.ResponseWriter, req *http.Request) {
@@ -138,13 +145,21 @@ func (h *Handler) delete(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	tableTemplate, err := template.ParseFiles("ch7/sec7.7/table.html")
+	if err != nil {
+		log.Fatal("Parsing template file failed", err)
+	}
+
 	db := &Database{
 		data: map[string]Dollar{
 			"shoes": 50,
 			"socks": 5,
 		},
 	}
-	handler := Handler{db: db}
+	handler := Handler{
+		db:           db,
+		listTemplate: tableTemplate,
+	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/list", http.HandlerFunc(handler.list))
