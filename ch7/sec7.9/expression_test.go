@@ -53,6 +53,12 @@ func TestEval(t *testing.T) {
 			wantPretty: "((5 / 9) * (F - 32))",
 			wantValue:  "100",
 		},
+		{
+			expr:       "5! * 2",
+			env:        expr.Env{"F": 212},
+			wantPretty: "(5! * 2)",
+			wantValue:  "240",
+		},
 	}
 	var prevExpr string
 	for _, test := range tests {

@@ -165,6 +165,31 @@ func (c call) String() string {
 	return buf.String()
 }
 
+type postUnary struct {
+	op rune // one of '!'
+	x  Expr
+}
+
+func (p postUnary) Eval(env Env) float64 {
+	x := p.x.Eval(env)
+	val := 1.0
+	for i := float64(2); i <= x; i++ {
+		val *= i
+	}
+	return val
+}
+
+func (p postUnary) Check(vars map[Var]bool) error {
+	if p.op != '!' {
+		return fmt.Errorf("unsupported op: %v", string(p.op))
+	}
+	return p.x.Check(vars)
+}
+
+func (p postUnary) String() string {
+	return fmt.Sprintf("%s!", p.x)
+}
+
 // An Env maps variables to their values.
 type Env map[Var]float64
 
