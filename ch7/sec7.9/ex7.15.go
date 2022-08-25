@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func main() {
+func main2() {
 	input := strings.Join(os.Args[1:], "")
 	expr, err := Parse(input)
 	if err != nil {
