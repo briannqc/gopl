@@ -59,7 +59,7 @@ func corner(i, j int, f func(float64, float64) float64) (float64, float64) {
 	return sx, sy
 }
 
-func main() {
+func main1() {
 	http.HandleFunc("/plot", plot)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

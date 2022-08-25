@@ -106,6 +106,9 @@ func (b binary) Check(vars map[Var]bool) error {
 	if err := b.x.Check(vars); err != nil {
 		return err
 	}
+	if err := b.y.Check(vars); err != nil {
+		return err
+	}
 	return nil
 }
 
