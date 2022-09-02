@@ -20,7 +20,7 @@ func main() {
 		done <- struct{}{}
 	}()
 
-	in := strings.NewReader("Hello!!!")
+	in := strings.NewReader("Hello!!!\nBonjour!!!\nXin chào!!!")
 	mustCopy(conn, in)
 
 	if conn, ok := conn.(*net.TCPConn); ok {

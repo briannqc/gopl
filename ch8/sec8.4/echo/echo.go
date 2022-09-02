@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -20,8 +21,9 @@ func main() {
 			log.Println(err)
 			continue
 		}
-
-		go handleConn(conn)
+		if conn, ok := conn.(*net.TCPConn); ok {
+			go handleConn(conn)
+		}
 	}
 }
 
@@ -33,10 +35,20 @@ func echo(c net.Conn, shout string, delay time.Duration) {
 	_, _ = fmt.Fprintln(c, "\t", strings.ToLower(shout))
 }
 
-func handleConn(c net.Conn) {
+func handleConn(c *net.TCPConn) {
 	input := bufio.NewScanner(c)
+	var wg sync.WaitGroup
 	for input.Scan() {
-		echo(c, input.Text(), 1*time.Second)
+		text := input.Text()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			echo(c, text, 1*time.Second)
+		}()
 	}
-	_ = c.Close()
+	_ = c.CloseRead()
+
+	wg.Wait()
+	_ = c.CloseWrite()
 }
