@@ -66,9 +66,16 @@ func broadcaster() {
 
 func handleConn(conn net.Conn) {
 	ch := make(chan string)
+	_, _ = fmt.Fprintln(conn, "What is your name?")
+
+	input := bufio.NewScanner(conn)
+	var who = conn.RemoteAddr().String()
+	if input.Scan() {
+		who = input.Text()
+	}
+
 	go clientWriter(conn, ch)
 
-	who := conn.RemoteAddr().String()
 	ch <- "You are " + who
 	messages <- who + " has arrived"
 	entering <- namedClient{
@@ -93,7 +100,6 @@ func handleConn(conn net.Conn) {
 		}
 	}()
 
-	input := bufio.NewScanner(conn)
 	for input.Scan() {
 		ticker.Reset(maxIdle)
 		messages <- who + ": " + input.Text()
