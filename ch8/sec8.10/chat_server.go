@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -75,14 +76,29 @@ func handleConn(conn net.Conn) {
 		client: ch,
 	}
 
+	done := make(chan bool)
+	maxIdle := 5 * 60 * time.Second
+	ticker := time.NewTicker(maxIdle)
+
+	go func() {
+		select {
+		case <-done:
+			leaving <- ch
+			messages <- who + " has left"
+			_ = conn.Close()
+		case <-ticker.C:
+			leaving <- ch
+			messages <- who + " stayed idle -> disconnect it"
+			_ = conn.Close()
+		}
+	}()
+
 	input := bufio.NewScanner(conn)
 	for input.Scan() {
+		ticker.Reset(maxIdle)
 		messages <- who + ": " + input.Text()
 	}
-
-	leaving <- ch
-	messages <- who + " has left"
-	_ = conn.Close()
+	close(done)
 }
 
 func clientWriter(conn net.Conn, ch chan string) {
