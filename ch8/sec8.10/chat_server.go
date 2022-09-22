@@ -45,9 +45,17 @@ func broadcaster() {
 		select {
 		case msg := <-messages:
 			// Broadcast incoming message to all clients'
-			// outgoing message channels.
+			// outgoing message channels. Wait at most 1sec,
+			// or skip if client is unable to read the message.
 			for cli := range clients {
-				cli <- msg
+				timer := time.NewTimer(1 * time.Second)
+				select {
+				case cli <- msg:
+					timer.Stop()
+					continue
+				case <-timer.C:
+					continue
+				}
 			}
 		case cli := <-entering:
 			clients[cli.client] = cli.name
@@ -65,7 +73,7 @@ func broadcaster() {
 }
 
 func handleConn(conn net.Conn) {
-	ch := make(chan string)
+	ch := make(chan string, 1000)
 	_, _ = fmt.Fprintln(conn, "What is your name?")
 
 	input := bufio.NewScanner(conn)
