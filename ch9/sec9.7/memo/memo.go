@@ -1,6 +1,10 @@
 package memo
 
-import "sync"
+import (
+	"context"
+	"errors"
+	"sync"
+)
 
 type entry struct {
 	res   result
@@ -13,7 +17,7 @@ type Memo struct {
 	cache map[string]*entry
 }
 
-type Func func(string) (interface{}, error)
+type Func func(context.Context, string) (interface{}, error)
 
 type result struct {
 	value interface{}
@@ -27,7 +31,7 @@ func New(f Func) *Memo {
 	}
 }
 
-func (m *Memo) Get(key string) (interface{}, error) {
+func (m *Memo) Get(ctx context.Context, key string) (interface{}, error) {
 	m.mu.Lock()
 	e := m.cache[key]
 
@@ -41,16 +45,23 @@ func (m *Memo) Get(key string) (interface{}, error) {
 		m.cache[key] = e
 		m.mu.Unlock()
 
-		e.res.value, e.res.err = m.f(key)
+		e.res.value, e.res.err = m.f(ctx, key)
 		close(e.ready)
 	} else {
 		m.mu.Unlock()
 		<-e.ready
 	}
+	if errors.Is(e.res.err, context.DeadlineExceeded) {
+		m.mu.Lock()
+		delete(m.cache, key)
+		m.mu.Unlock()
+		return nil, errors.New("cache missed")
+	}
 	return e.res.value, e.res.err
 }
 
 type request struct {
+	ctx      context.Context
 	key      string
 	response chan result
 }
@@ -70,8 +81,9 @@ func (m *V2) Close() {
 	close(m.requests)
 }
 
-func (m *V2) Get(key string) (interface{}, error) {
+func (m *V2) Get(ctx context.Context, key string) (interface{}, error) {
 	req := request{
+		ctx:      ctx,
 		key:      key,
 		response: make(chan result),
 	}
@@ -87,14 +99,14 @@ func (m *V2) server(f Func) {
 		if e == nil {
 			e = &entry{ready: make(chan struct{})}
 			cache[req.key] = e
-			go e.call(f, req.key)
+			go e.call(f, req.ctx, req.key)
 		}
 		go e.deliver(req.response)
 	}
 }
 
-func (e *entry) call(f Func, key string) {
-	e.res.value, e.res.err = f(key)
+func (e *entry) call(f Func, ctx context.Context, key string) {
+	e.res.value, e.res.err = f(ctx, key)
 	close(e.ready)
 }
 

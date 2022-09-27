@@ -1,10 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"sync"
@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	m := memo.NewV2(httpGetBody)
+	m := memo.New(httpGetBody)
 	var wg sync.WaitGroup
 	for _, url := range os.Args[1:] {
 		wg.Add(1)
@@ -23,19 +23,24 @@ func main() {
 			defer wg.Done()
 
 			start := time.Now()
-			value, err := m.Get(url)
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+			defer cancel()
+
+			value, err := m.Get(ctx, url)
 			if err != nil {
-				log.Print(err)
+				fmt.Printf("%s. %s, err: %v\n", url, time.Since(start), err)
+			} else {
+				fmt.Printf("%s. %s, %d bytes\n", url, time.Since(start), len(value.([]byte)))
 			}
-			fmt.Printf("%s. %s, %d bytes\n", url, time.Since(start), len(value.([]byte)))
 		}(url)
 	}
 
 	wg.Wait()
 }
 
-func httpGetBody(url string) (interface{}, error) {
-	resp, err := http.Get(url)
+func httpGetBody(ctx context.Context, url string) (interface{}, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
