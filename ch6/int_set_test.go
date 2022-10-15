@@ -1,6 +1,7 @@
 package ch6
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -159,6 +160,14 @@ func TestIntSet_Clear(t *testing.T) {
 		set.Clear()
 		assert.Equal(t, 0, set.Len())
 	}
+}
+
+func ExampleIntSet_Add() {
+	set := new(IntSet)
+	set.Add(1)
+	fmt.Println(set.Has(1))
+	// Output:
+	// true
 }
 
 func TestIntSet_Copy(t *testing.T) {
